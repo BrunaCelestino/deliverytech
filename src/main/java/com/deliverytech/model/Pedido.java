@@ -2,6 +2,8 @@ package com.deliverytech.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +31,7 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     private StatusPedido status;
 
+    @Default
     private LocalDateTime dataPedido = LocalDateTime.now();
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)

@@ -2,8 +2,9 @@ package com.deliverytech.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
+
 import java.math.BigDecimal;
-import java.time.LocalTime;
 import java.util.List;
 
 @Entity
@@ -26,6 +27,7 @@ public class Restaurante {
 
     private Integer tempoEntregaMinutos;
 
+    @Default
     private Boolean ativo = true;
 
     @OneToMany(mappedBy = "restaurante", cascade = CascadeType.ALL)
