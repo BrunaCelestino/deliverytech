@@ -2,6 +2,8 @@ package com.deliverytech.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,8 +26,10 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Default
     private Boolean ativo = true;
 
+    @Default
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     private Long restauranteId;

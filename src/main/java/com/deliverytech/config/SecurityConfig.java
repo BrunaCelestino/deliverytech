@@ -47,7 +47,7 @@ public class SecurityConfig {
                         
                         // Endpoints de Restaurante e Produto: Apenas ADMIN pode gerenciar
                         .requestMatchers("/api/restaurantes").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/restaurantes/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/restaurantes/**").hasAuthority("ROLE_CLIENTE")
                         .requestMatchers("/api/produtos").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/produtos/**").hasAuthority("ROLE_ADMIN")
                         

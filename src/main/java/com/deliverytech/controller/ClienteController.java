@@ -2,12 +2,16 @@ package com.deliverytech.controller;
 
 import com.deliverytech.dto.request.ClienteRequest;
 import com.deliverytech.dto.response.ClienteResponse;
+import com.deliverytech.dto.response.PageResponse;
 import com.deliverytech.model.Cliente;
 import com.deliverytech.service.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,21 +41,39 @@ public class ClienteController {
 
         logger.debug("Cliente salvo com ID {}", salvo.getId());
 
-        return ResponseEntity.ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
+        return ResponseEntity
+                .ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
     }
 
     @GetMapping
-    public List<ClienteResponse> listar() {
+    public PageResponse<ClienteResponse> listar(
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         logger.info("Listando todos os clientes ativos");
-        return clienteService.listarAtivos().stream()
-                .map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo()))
-                .collect(Collectors.toList());
+
+        Integer pageAtualizada = page == 0 ? 0 : (page - 1);
+
+        Pageable pageable = PageRequest.of(pageAtualizada, pageSize);
+        Page<Cliente> clientePage = clienteService.listarAtivos(pageable);
+
+        PageResponse<ClienteResponse> clienteResponse = new PageResponse<ClienteResponse>(
+                clientePage.stream().map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo())).toList(),
+                clientePage.getTotalElements(),
+                clientePage.getTotalPages(),
+                clientePage.getPageable().getPageSize(),
+                page == 0 ? 0 : clientePage.getPageable().getPageNumber() + 1);
+
+    return clienteResponse;
     }
+
     @GetMapping("/clientes") // Mapeia a URL http://localhost:8080/clientes
-    public List<ClienteResponse> listarClientesNoEndpointSimples() {
+    public List<ClienteResponse> listarClientesNoEndpointSimples(
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         logger.info("Acessando o endpoint simplificado /clientes");
 
-        return clienteService.listarAtivos().stream()
+        Pageable pageable = PageRequest.of(page, pageSize);
+        return clienteService.listarAtivos(pageable).stream()
                 .map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo()))
                 .collect(Collectors.toList());
     }
@@ -69,7 +91,8 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClienteResponse> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest request) {
+    public ResponseEntity<ClienteResponse> atualizar(@PathVariable Long id,
+            @Valid @RequestBody ClienteRequest request) {
         logger.info("Atualizando cliente ID: {}", id);
 
         Cliente atualizado = Cliente.builder()
@@ -79,7 +102,8 @@ public class ClienteController {
 
         Cliente salvo = clienteService.atualizar(id, atualizado);
 
-        return ResponseEntity.ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
+        return ResponseEntity
+                .ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
     }
 
     @PatchMapping("/{id}/status")

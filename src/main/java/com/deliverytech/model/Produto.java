@@ -2,6 +2,8 @@ package com.deliverytech.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -22,6 +24,7 @@ public class Produto {
 
     private BigDecimal preco;
 
+    @Default
     private Boolean disponivel = true;
 
     @ManyToOne

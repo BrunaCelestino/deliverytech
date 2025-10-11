@@ -2,6 +2,8 @@ package com.deliverytech.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,8 +22,10 @@ public class Cliente {
     @Column(unique = true)
     private String email;
 
+    @Default
     private Boolean ativo = true;
 
+    @Default
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
