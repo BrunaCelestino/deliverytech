@@ -1,5 +1,6 @@
 package com.deliverytech.service.impl;
 
+import com.deliverytech.exception.EntityNotFoundException;
 import com.deliverytech.model.Restaurante;
 import com.deliverytech.repository.RestauranteRepository;
 import com.deliverytech.service.RestauranteService;
@@ -48,6 +49,6 @@ public class RestauranteServiceImpl implements RestauranteService {
                 r.setTaxaEntrega(atualizado.getTaxaEntrega());
                 r.setTempoEntregaMinutos(atualizado.getTempoEntregaMinutos());
                 return restauranteRepository.save(r);
-            }).orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+            }).orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
     }
 }

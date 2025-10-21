@@ -3,8 +3,10 @@ package com.deliverytech.controller;
 import com.deliverytech.dto.request.ClienteRequest;
 import com.deliverytech.dto.response.ClienteResponse;
 import com.deliverytech.dto.response.PageResponse;
+import com.deliverytech.exception.EntityNotFoundException;
 import com.deliverytech.model.Cliente;
 import com.deliverytech.service.ClienteService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,7 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,8 +45,15 @@ public class ClienteController {
 
         logger.debug("Cliente salvo com ID {}", salvo.getId());
 
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{id}")
+            .buildAndExpand(salvo.getId())
+            .toUri();
+
         return ResponseEntity
-                .ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
+                .created(location)
+                .body(new ClienteResponse(salvo.getId(), 
+                salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
     }
 
     @GetMapping
@@ -56,6 +67,10 @@ public class ClienteController {
         Pageable pageable = PageRequest.of(pageAtualizada, pageSize);
         Page<Cliente> clientePage = clienteService.listarAtivos(pageable);
 
+        if (clientePage.getTotalElements() == 0) {
+            throw new EntityNotFoundException("cliente");
+        }
+
         PageResponse<ClienteResponse> clienteResponse = new PageResponse<ClienteResponse>(
                 clientePage.stream().map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo())).toList(),
                 clientePage.getTotalElements(),
@@ -67,15 +82,23 @@ public class ClienteController {
     }
 
     @GetMapping("/clientes") // Mapeia a URL http://localhost:8080/clientes
-    public List<ClienteResponse> listarClientesNoEndpointSimples(
+    public ResponseEntity<List<ClienteResponse>> listarClientesNoEndpointSimples(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         logger.info("Acessando o endpoint simplificado /clientes");
 
         Pageable pageable = PageRequest.of(page, pageSize);
-        return clienteService.listarAtivos(pageable).stream()
+
+        List<ClienteResponse> list = clienteService.listarAtivos(pageable).stream()
                 .map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo()))
                 .collect(Collectors.toList());
+
+        if (list.isEmpty()) {
+            throw new EntityNotFoundException("cliente");
+        }
+
+        return ResponseEntity.ok(list);
+    
     }
 
     @GetMapping("/{id}")
@@ -84,10 +107,7 @@ public class ClienteController {
         return clienteService.buscarPorId(id)
                 .map(c -> new ClienteResponse(c.getId(), c.getNome(), c.getEmail(), c.getAtivo()))
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> {
-                    logger.warn("Cliente com ID {} não encontrado", id);
-                    return ResponseEntity.notFound().build();
-                });
+                .orElseThrow(() -> new EntityNotFoundException("Cliente", id));
     }
 
     @PutMapping("/{id}")

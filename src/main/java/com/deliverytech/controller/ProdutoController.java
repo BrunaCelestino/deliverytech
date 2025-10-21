@@ -2,6 +2,7 @@ package com.deliverytech.controller;
 
 import com.deliverytech.dto.request.ProdutoRequest;
 import com.deliverytech.dto.response.ProdutoResponse;
+import com.deliverytech.exception.EntityNotFoundException;
 import com.deliverytech.model.Produto;
 import com.deliverytech.model.Restaurante;
 import com.deliverytech.service.ProdutoService;
@@ -25,7 +26,7 @@ public class ProdutoController {
     @PostMapping
     public ResponseEntity<ProdutoResponse> cadastrar(@Valid @RequestBody ProdutoRequest request) {
         Restaurante restaurante = restauranteService.buscarPorId(request.getRestauranteId())
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante", request.getRestauranteId()));
 
         Produto produto = Produto.builder()
                 .nome(request.getNome())
@@ -43,9 +44,15 @@ public class ProdutoController {
 
     @GetMapping("/restaurante/{restauranteId}")
     public List<ProdutoResponse> listarPorRestaurante(@PathVariable Long restauranteId) {
-        return produtoService.buscarPorRestaurante(restauranteId).stream()
+        List<ProdutoResponse> list = produtoService.buscarPorRestaurante(restauranteId).stream()
                 .map(p -> new ProdutoResponse(p.getId(), p.getNome(), p.getCategoria(), p.getDescricao(), p.getPreco(), p.getDisponivel()))
                 .collect(Collectors.toList());
+
+        if (list.isEmpty()) {
+            throw new EntityNotFoundException("Restaurante", restauranteId);
+        }
+
+        return list;
     }
 
     @PutMapping("/{id}")

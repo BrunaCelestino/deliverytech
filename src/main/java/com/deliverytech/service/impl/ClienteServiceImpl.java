@@ -1,5 +1,6 @@
 package com.deliverytech.service.impl;
 
+import com.deliverytech.exception.EntityNotFoundException;
 import com.deliverytech.model.Cliente;
 import com.deliverytech.repository.ClienteRepository;
 import com.deliverytech.service.ClienteService;
@@ -38,15 +39,15 @@ public class ClienteServiceImpl implements ClienteService {
                 .map(c -> {
                     c.setNome(atualizado.getNome());
                     return clienteRepository.save(c);
-                }).orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                }).orElseThrow(() -> new EntityNotFoundException("Cliente", id));
     }
 
     @Override
     public void ativarDesativar(Long id) {
-        clienteRepository.findById(id).ifPresent(c -> {
+        clienteRepository.findById(id).map(c -> {
             c.setAtivo(!c.getAtivo());
-            clienteRepository.save(c);
-        });
+            return clienteRepository.save(c);
+        }).orElseThrow(() -> new EntityNotFoundException("Cliente", id));
     }
     
 //  private void simulateDelay() {
