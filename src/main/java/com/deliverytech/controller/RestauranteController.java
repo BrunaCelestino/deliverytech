@@ -3,8 +3,15 @@ package com.deliverytech.controller;
 import com.deliverytech.dto.request.RestauranteRequest;
 import com.deliverytech.dto.response.RestauranteResponse;
 import com.deliverytech.exception.EntityNotFoundException;
+import com.deliverytech.exception.ErrorResponse;
 import com.deliverytech.model.Restaurante;
 import com.deliverytech.service.RestauranteService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +27,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Restaurantes", description = "Endpoints para gerenciamento de restaurantes")
 @RestController
 @RequestMapping("/api/restaurantes")
 @RequiredArgsConstructor
@@ -27,6 +35,13 @@ public class RestauranteController {
 
     private final RestauranteService restauranteService;
 
+
+    @Operation(summary = "Cadastra um novo restaurante", description = "Cria um novo restaurante no sistema.")
+    @ApiResponse(responseCode = "201", description = "Restaurante cadastrado")
+    @ApiResponse(responseCode = "400", description = "Dados inválidos para cadastro",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))     
     @PostMapping
     public ResponseEntity<RestauranteResponse> cadastrar(@Valid @RequestBody RestauranteRequest request) {
         Restaurante restaurante = Restaurante.builder()
@@ -49,6 +64,12 @@ public class RestauranteController {
                 salvo.getTaxaEntrega(), salvo.getTempoEntregaMinutos(), salvo.getAtivo()));
     }
 
+    @Operation(summary = "Listar todos os restaurantes", description = "Retorna uma lista paginada de todos os restaurantes.")
+    @ApiResponse(responseCode = "200", description = "Restaurantes encontrados")
+    @ApiResponse(responseCode = "404", description = "Restaurantes não encontrados.",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))  
     @GetMapping
     public Page<RestauranteResponse> listarTodos(
          @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -68,6 +89,12 @@ public class RestauranteController {
         return pages;
     }
 
+    @Operation(summary = "Busca um restaurante por ID", description = "Retorna os detalhes de um restaurante específico pelo ID.")
+    @ApiResponse(responseCode = "200", description = "Restaurante encontrado")
+    @ApiResponse(responseCode = "404", description = "Restaurante não encontrado.",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))      
     @GetMapping("/{id}")
     public ResponseEntity<RestauranteResponse> buscarPorId(@PathVariable Long id) {
         return restauranteService.buscarPorId(id)
@@ -76,6 +103,12 @@ public class RestauranteController {
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
     }
 
+    @Operation(summary = "Busca restaurantes por categoria", description = "Retorna uma lista de restaurantes que pertencem a uma categoria específica.")
+    @ApiResponse(responseCode = "200", description = "Restaurantes encontrados")
+    @ApiResponse(responseCode = "404", description = "Restaurantes não encontrados.",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))  
     @GetMapping("/categoria/{categoria}")
     public List<RestauranteResponse> buscarPorCategoria(@PathVariable String categoria) {
         List<RestauranteResponse> list =  restauranteService.buscarPorCategoria(categoria).stream()
@@ -89,6 +122,12 @@ public class RestauranteController {
         return list;
     }
 
+    @Operation(summary = "Atualiza um restaurante", description = "Atualiza os dados de um restaurante existente a partir do seu ID.")
+    @ApiResponse(responseCode = "200", description = "Restaurantes atualizado")
+    @ApiResponse(responseCode = "404", description = "Restaurante não encontrado.",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))  
     @PutMapping("/{id}")
     public ResponseEntity<RestauranteResponse> atualizar(@PathVariable Long id, @Valid @RequestBody RestauranteRequest request) {
         Restaurante atualizado = Restaurante.builder()

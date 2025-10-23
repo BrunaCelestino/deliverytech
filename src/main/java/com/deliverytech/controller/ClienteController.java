@@ -4,9 +4,15 @@ import com.deliverytech.dto.request.ClienteRequest;
 import com.deliverytech.dto.response.ClienteResponse;
 import com.deliverytech.dto.response.PageResponse;
 import com.deliverytech.exception.EntityNotFoundException;
+import com.deliverytech.exception.ErrorResponse;
 import com.deliverytech.model.Cliente;
 import com.deliverytech.service.ClienteService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,6 +28,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Clientes", description = "Endpoints para gerenciamento de clientes")
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
@@ -31,6 +38,12 @@ public class ClienteController {
 
     private final ClienteService clienteService;
 
+    @Operation(summary = "Cadastra um novo cliente", description = "Cria um novo cliente no sistema.")
+    @ApiResponse(responseCode = "201", description = "Cliente cadastrado")
+    @ApiResponse(responseCode = "400", description = "Dados inválidos para cadastro",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     public ResponseEntity<ClienteResponse> cadastrar(@Valid @RequestBody ClienteRequest request) {
         logger.info("Cadastro de cliente iniciado: {}", request.getEmail());
@@ -56,6 +69,12 @@ public class ClienteController {
                 salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
     }
 
+    @Operation(summary = "Listar todos os clientes ativos", description = "Retorna uma lista paginada de todos os clientes com status ativo.")
+    @ApiResponse(responseCode = "200", description = "Clientes encontrados")
+    @ApiResponse(responseCode = "404", description = "Nenhum cliente foi encontrado",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping
     public PageResponse<ClienteResponse> listar(
             @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -81,6 +100,12 @@ public class ClienteController {
     return clienteResponse;
     }
 
+    @Operation(summary = "Listar todos os clientes ativos", description = "Endpoint simplificado. Retorna uma lista não paginada de todos os clientes com status ativo.")
+    @ApiResponse(responseCode = "200", description = "Clientes encontrados")
+    @ApiResponse(responseCode = "404", description = "Nenhum cliente foi encontrado",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))    
     @GetMapping("/clientes") // Mapeia a URL http://localhost:8080/clientes
     public ResponseEntity<List<ClienteResponse>> listarClientesNoEndpointSimples(
             @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -101,6 +126,12 @@ public class ClienteController {
     
     }
 
+    @Operation(summary = "Buscar um cliente por ID", description = "Retorna os detalhes de um cliente específico pelo seu ID")
+    @ApiResponse(responseCode = "200", description = "Cliente encontrado")
+    @ApiResponse(responseCode = "404", description = "Nenhum cliente foi encontrado",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
     public ResponseEntity<ClienteResponse> buscar(@PathVariable Long id) {
         logger.info("Buscando cliente com ID: {}", id);
@@ -110,6 +141,12 @@ public class ClienteController {
                 .orElseThrow(() -> new EntityNotFoundException("Cliente", id));
     }
 
+    @Operation(summary = "Atualiza um cliente", description = "Atualiza os dados de um cliente existente a partir do seu ID.")
+    @ApiResponse(responseCode = "200", description = "Cliente atualizado")
+    @ApiResponse(responseCode = "404", description = "Cliente não foi encontrado",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
     public ResponseEntity<ClienteResponse> atualizar(@PathVariable Long id,
             @Valid @RequestBody ClienteRequest request) {
@@ -126,6 +163,12 @@ public class ClienteController {
                 .ok(new ClienteResponse(salvo.getId(), salvo.getNome(), salvo.getEmail(), salvo.getAtivo()));
     }
 
+    @Operation(summary = "Ativa ou desativa um cliente", description = "Altera o status de um cliente (ativo/inativo) a partir do seu ID.")
+    @ApiResponse(responseCode = "204", description = "Cliente atualizado e nada foi retornado")
+    @ApiResponse(responseCode = "404", description = "Cliente não foi encontrado",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> ativarDesativar(@PathVariable Long id) {
         logger.info("Alterando status do cliente ID: {}", id);
@@ -133,6 +176,9 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Status Api", description = "Obtêm status da API")
+    @ApiResponse(responseCode = "200", description = "API está online")
+    @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     @GetMapping("/status")
     public ResponseEntity<String> status() {
         logger.debug("Status endpoint acessado");
