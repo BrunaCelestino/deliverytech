@@ -5,6 +5,8 @@ import com.deliverytech.model.Produto;
 import com.deliverytech.repository.ProdutoRepository;
 import com.deliverytech.service.ProdutoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -49,5 +51,10 @@ public class ProdutoServiceImpl implements ProdutoService {
             p.setDisponivel(disponivel);
            return produtoRepository.save(p);
         }).orElseThrow(() -> new EntityNotFoundException("Produto", id));
+    }
+
+    @Override
+    public Page<Produto> listar(Pageable pageable) {
+        return produtoRepository.findAll(pageable);
     }
 }

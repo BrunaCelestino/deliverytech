@@ -9,16 +9,21 @@ import com.deliverytech.model.Restaurante;
 import com.deliverytech.service.ProdutoService;
 import com.deliverytech.service.RestauranteService;
 
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,4 +113,12 @@ public class ProdutoController {
         produtoService.alterarDisponibilidade(id, disponivel);
         return ResponseEntity.noContent().build();
     }
+
+    @Cacheable("produtos")
+    @Timed(value = "produtos.buscar", histogram = true)
+    @GetMapping("/produtos")
+    public Page<Produto> buscar(Pageable pageable) {
+        return produtoService.listar(pageable);
+    }
+
 }

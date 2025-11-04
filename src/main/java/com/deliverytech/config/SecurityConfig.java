@@ -26,6 +26,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        final String[] PUBLIC_ENDPOINTS = {
+                "/api/auth/**",
+                "/swagger-ui.html",
+                "/swagger-ui/**",
+                "/api-docs/**",
+                "/h2-console/**",
+                "/actuator/**",
+                "/health",
+                "/info"
+        };
+
+
         return http
                 .csrf(csrf -> csrf.disable()) // Desabilita a proteção CSRF que não é necessária para uma API stateless
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) 
@@ -34,8 +47,7 @@ public class SecurityConfig {
                 
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints Públicos: Acesso liberado para todos
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/health","/info","/swagger-ui.html","/swagger-ui/**", "/api-docs/**", "/h2-console/**", "/actuator/**").permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                         // Endpoints de Cliente: ADMIN pode gerenciar, CLIENTE pode se cadastrar
                         .requestMatchers("/api/clientes","/clientes").hasAnyAuthority("ROLE_ADMIN", "ROLE_CLIENTE")
